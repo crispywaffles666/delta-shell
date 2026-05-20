@@ -21,6 +21,17 @@ const notifd = AstalNotifd.get_default();
 const { position } = config.notifications;
 const { margin } = theme.window;
 
+function isNiriScreenshotNotification(notification: AstalNotifd.Notification) {
+   const appName = notification.appName.toLowerCase();
+   const summary = notification.summary.toLowerCase();
+   const body = notification.body.toLowerCase();
+
+   return (
+      appName === "niri" &&
+      (summary.includes("screenshot") || body.includes("screenshot"))
+   );
+}
+
 export function NotificationsWindow() {
    const { TOP, BOTTOM, RIGHT, LEFT } = Astal.WindowAnchor;
    let contentbox: Gtk.Box;
@@ -32,6 +43,11 @@ export function NotificationsWindow() {
 
    const notifiedHandler = notifd.connect("notified", (_, id, replaced) => {
       const notification = notifd.get_notification(id);
+
+      if (isNiriScreenshotNotification(notification)) {
+         notification.dismiss();
+         return;
+      }
 
       if (replaced && notifications.get().some((n) => n.id === id)) {
          setNotifications((ns) =>
